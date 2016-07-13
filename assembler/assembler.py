@@ -14,7 +14,6 @@ DESCRIPTION: Create an assembler for a SIC XE program
 
 import sys
 import re
-#from bitstring import Bits
 
 splitLine = []
 currentLine = 0
@@ -26,46 +25,45 @@ pcRelativeStatus = False
 indexStatus = False
 fullFile = []
 currentBased = "0"
-#currentLocation = "0"
 
 
-opcodeDictionary = {"ADD":"18", "ADDF":"58", "ADDR":"90", "AND":"40", 
-                    "CLEAR":"B4", "COMP":"28", "COMPF":"88", "COMPR":"A0", 
-                    "DIV":"24", "DIVF":"64", "DIVR":"9C", "FIX":"C4", 
+opcodeDictionary = {"ADD":"18", "ADDF":"58", "ADDR":"90", "AND":"40",
+                    "CLEAR":"B4", "COMP":"28", "COMPF":"88", "COMPR":"A0",
+                    "DIV":"24", "DIVF":"64", "DIVR":"9C", "FIX":"C4",
                     "FLOAT":"C0", "HIO":"F4", "J":"3C", "JEQ":"30", "JGT":"34",
-                    "JLT":"38", "JSUB":"48", "LDA":"00", "LDB":"68", 
-                    "LDCH":"50", "LDF":"70", "LDL":"08", "LDS":"6C", 
+                    "JLT":"38", "JSUB":"48", "LDA":"00", "LDB":"68",
+                    "LDCH":"50", "LDF":"70", "LDL":"08", "LDS":"6C",
                     "LDT":"74", "LDX":"04", "LPS":"D0", "MUL":"20", "MULF":"60",
                     "MULR":"98", "NORM":"C8", "OR":"44", "RD":"D8", "RMO":"AC",
-                    "RSUB":"4C", "SHIFTL":"A4", "SHIFTR":"A8", "SIO":"F0", 
+                    "RSUB":"4C", "SHIFTL":"A4", "SHIFTR":"A8", "SIO":"F0",
                     "SSK":"EC", "STA":"0C", "STB":"78", "STCH":"54", "STF":"80",
                     "STI":"D4", "STL":"14", "STS":"7C", "STSW":"E8", "STT":"84",
-                    "STX":"10", "SUB":"1C", "SUBF":"5C", "SUBR":"94", 
+                    "STX":"10", "SUB":"1C", "SUBF":"5C", "SUBR":"94",
                     "SVC":"B0", "TD":"E0", "TIO":"F8", "TIX":"2C", "TIXR":"B8",
                     "WD":"DC"}
 
-typeDictionary = {"ADD":"3", "ADDF":"3", "ADDR":"2", "AND":"3", 
-                    "CLEAR":"2", "COMP":"3", "COMPF":"3", "COMPR":"2", 
-                    "DIV":"3", "DIVF":"3", "DIVR":"2", "FIX":"1", 
+typeDictionary = {"ADD":"3", "ADDF":"3", "ADDR":"2", "AND":"3",
+                    "CLEAR":"2", "COMP":"3", "COMPF":"3", "COMPR":"2",
+                    "DIV":"3", "DIVF":"3", "DIVR":"2", "FIX":"1",
                     "FLOAT":"1", "HIO":"1", "J":"3", "JEQ":"3", "JGT":"3",
-                    "JLT":"3", "JSUB":"3", "LDA":"3", "LDB":"3", 
-                    "LDCH":"3", "LDF":"3", "LDL":"3", "LDS":"3", 
+                    "JLT":"3", "JSUB":"3", "LDA":"3", "LDB":"3",
+                    "LDCH":"3", "LDF":"3", "LDL":"3", "LDS":"3",
                     "LDT":"3", "LDX":"3", "LPS":"3", "MUL":"3", "MULF":"3",
                     "MULR":"2", "NORM":"1", "OR":"3", "RD":"3", "RMO":"2",
-                    "RSUB":"3", "SHIFTL":"2", "SHIFTR":"2", "SIO":"1", 
+                    "RSUB":"3", "SHIFTL":"2", "SHIFTR":"2", "SIO":"1",
                     "SSK":"3", "STA":"3", "STB":"3", "STCH":"3", "STF":"3",
                     "STI":"3", "STL":"3", "STS":"3", "STSW":"3", "STT":"3",
-                    "STX":"3", "SUB":"3", "SUBF":"3", "SUBR":"2", 
+                    "STX":"3", "SUB":"3", "SUBF":"3", "SUBR":"2",
                     "SVC":"2", "TD":"3", "TIO":"1", "TIX":"3", "TIXR":"2",
                     "WD":"3"}
 
-locationDictionary = {"A":"0", "X":"1", "L":"2", "PC":"8", "SW":"9", "B":"3", 
+locationDictionary = {"A":"0", "X":"1", "L":"2", "PC":"8", "SW":"9", "B":"3",
                       "S":"4", "T":"5", "F":"6"}
 
 
 
 def regularExpressionSplit(line):
-# Uses a regular expression to split the given line 
+# Uses a regular expression to split the given line
 
     global splitLine
 
@@ -86,21 +84,19 @@ def regularExpressionSplit(line):
     indexStatus = False
 
 
-    regexMatch = re.match("^(\w+|\s?)\s*(\+|\s)\s*(\w+)\s*(\@|\#|\s)\s*([a-zA-Z'_0-9]+|\s*)\s*(\,?|\s*)\s*(\w+|\s*)", 
+    regexMatch = re.match("^(\w+|\s?)\s*(\+|\s)\s*(\w+)\s*(\@|\#|\s)\s*([a-zA-Z'_0-9]+|\s*)\s*(\,?|\s*)\s*(\w+|\s*)",
                      line)
 
     if isAComment(line):
         splitLine = "$$COMMENT$$"
 
     elif regexMatch:
-        #print "regexMatch"
-
         splitLine.append(regexMatch.group(1))    # splitLine[0] == label
-            
+
         if regexMatch.group(2) == "+":
             extendedStatus = True
-        
-        splitLine.append(regexMatch.group(3))     # splitLine[1] == operator 
+
+        splitLine.append(regexMatch.group(3))     # splitLine[1] == operator
 
         if regexMatch.group(4) == "@":
             indirectStatus = True
@@ -108,26 +104,19 @@ def regularExpressionSplit(line):
             immediateStatus = True
 
         splitLine.append(regexMatch.group(5))       # splitLine[2] == operand
-        
+
         if regexMatch.group(7) == "X":
             indexStatus = True
         splitLine.append(regexMatch.group(7))  # splitLine[3] == second operand
-        
+
 
     else:
         splitLine = "$$NOT_VALID$$"
-        # print splitLine
-     
-    # for i in range(len(splitLine)):
-    #     print i
-    #     print splitLine[i]
-    
-    
-    
+
     return splitLine
 
 def isAComment(line):
-    
+
     line = list(line)
 
     for i in range(len(line)):
@@ -145,12 +134,12 @@ def isAComment(line):
 
 
 def locationUpdate():
-# Updates the global dictionary containing the locations of all the labels. 
+# Updates the global dictionary containing the locations of all the labels.
 # Also removes any line in fullFile that is either before "START", after "END", or is a comment
 
 
     global readFileName
-    global currentLine 
+    global currentLine
     global fullFile
     global locationDictionary
     global currentLocation
@@ -161,7 +150,6 @@ def locationUpdate():
     linesToDelete = []
 
     for line in fullFile:
-    #while readFile.readline() != "":
         splitLine = regularExpressionSplit(line)
         if splitLine[1].upper() == "START":
             currentLocation = splitLine[2]
@@ -170,28 +158,21 @@ def locationUpdate():
             break
         currentLine += 1
 
-    # print "found line counter"
-
     currentLine = savedLineCounter + 1
 
     while currentLine < (len(fullFile) - 1):
         splitLine = regularExpressionSplit(fullFile[currentLine].upper())
 
-################# Need to check if line is valid or not (I think this is done)
-
         operatorSize = 0
 
         if splitLine[1] == "END":
-            # print "reached END"
             while len(linesToDelete) != 0:
                 tempIndex = linesToDelete.pop()
-                fullFile.pop(tempIndex) 
-                # Remove all the comments, starting from the back
+                fullFile.pop(tempIndex)
             fullFile = fullFile[savedLineCounter:currentLine]
-            
+
 
         elif splitLine == "$$NOT_VALID$$":
-            #print currentLocation, " = ", splitLine
             operatorSize == 0
             linesToDelete.append(currentLine)
 
@@ -199,40 +180,32 @@ def locationUpdate():
             linesToDelete.append(currentLine)
 
         else:
-            #print splitLine[0]
-
             if splitLine[0].isspace():
-            #if splitLine[0] == " " or splitLine[0] == "\t": 
-                # If it doesnt have a label
-                #operatorName = str(splitLine[1])
                 if typeDictionary.has_key(splitLine[1]):
                     operatorSize = int(typeDictionary[splitLine[1]])
-                
                     if operatorSize == 3:
                         if extendedStatus:
                             operatorSize = operatorSize + 1
+
                 else:
                     operatorSize = labelLocation(splitLine)
-  
+
             else:     # If it does have a label
                 if locationDictionary.has_key(splitLine[0]):
                     print "error"
                     errorCall()
                 else:
                     locationDictionary[splitLine[0]] = currentLocation
-                    
+
                 if typeDictionary.has_key(splitLine[1]):
                     operatorSize = int(typeDictionary[splitLine[1]])
                     if operatorSize == 3:
                         if extendedStatus:
                             operatorSize = operatorSize + 1
-                #locationCount = locationCount + typeDictionay[splitLine[1]]
+
                 else:
                     operatorSize = labelLocation(splitLine)
 
-
-        # print "OPERATOR SIZE = ", operatorSize
-        # print splitLine[1]
         currentLocation = hexUpdater(currentLocation, operatorSize, 1)
         currentLine += 1
     return savedName, savedLineCounter
@@ -247,7 +220,7 @@ def labelLocation(splitLine):
             operatorSize = 1
         else:
              operatorSize = int(splitLine[2])
-    
+
     elif splitLine[1] == "WORD":
         operatorSize = 3
 
@@ -256,7 +229,6 @@ def labelLocation(splitLine):
 
     elif splitLine[1] == "RESW":
         operatorSize = int(splitLine[2]) * 3
-        # print "operator size = ", operatorSize
 
     elif splitLine[1] == "BASED":
         currentBased = currentLocation
@@ -268,14 +240,13 @@ def labelLocation(splitLine):
     else:
         print "AAAAH PROBLEM IN LABEL LOCATION"
         errorCall()
-        
 
     return operatorSize
 
 def hexUpdater(loc, size, number):
-# Takes the current location, the size of whatever needs to be added, then adds the two. 
+# Takes the current location, the size of whatever needs to be added, then adds the two.
 
-    # hexList = ["0", "1", "2", "3", "4", "5", "6", "7", 
+    # hexList = ["0", "1", "2", "3", "4", "5", "6", "7",
     #            "8", "9", "A", "B", "C", "D", "E", "F"]
 
     newSize = len(loc)
@@ -287,13 +258,13 @@ def hexUpdater(loc, size, number):
 
     while len(newLoc) < newSize:
         newLoc = "0" + newLoc
-    
+
     return newLoc.upper()
 
 def exceptionCheck(opcode):
     if splitLine[1] == "BYTE":
        return True
-    
+
     elif splitLine[1] == "WORD":
         return True
 
@@ -319,21 +290,21 @@ def sicMode():
     return
 
 def typeOne(line):
-    
+
     return opcodeDictionary[line[1]]
 
 def typeTwo(line):
 
     if not locationDictionary.has_key(line[2]) or not locationDictionary.has_key(line[3]):
         errorCall()
-    
+
     firstOperand = locationDictionary[line[2]]
     secondOperand = locationDictionary[line[3]]
 
     opcode = opcodeDictionary[line[1]]
-    
+
     final = opcode + firstOperand + secondOperand
-    
+
     return final
 
 def typeThree(line):
@@ -343,13 +314,13 @@ def typeThree(line):
 
     if extendedStatus:
         final = typeFour(line)
-    
+
 
     else:
         if pcCheck(line, 3):
             final = pcRelative(line, 3)
         else:
-            
+
             if indirectStatus:
                 if immediateStatus:
                     opcode = hexUpdater(opcode, 3, 1)  #Add 3 to hex value of opcode
@@ -360,7 +331,7 @@ def typeThree(line):
                     opcode = hexUpdater(opcode, 1, 1)  #Add 1 to hex value of opcode
                 else:
                     opcode = hexUpdater(opcode, 3, 1)
-  
+
             if indexStatus:
                 XBPE = hexUpdate(XBPE, 8, 1)
 
@@ -375,25 +346,19 @@ def typeThree(line):
             else:
                 errorCall()
 
-            
-        
-#        print "opcode = ", opcode        
-#        print "XBPE = ", XBPE
-#        print "addressCode = ", addressCode
 
 
 
-        
     return final
 
 def pcCheck(line, opType):
     global currentLocation
     operandLoc = locationDictionary[line[2]]
-    if opType == 3 : 
+    if opType == 3 :
         if int(locationDictionary[line[2]],16) >= 2^12:
             return True
     return False
-    
+
 def turnIntoBased(line):
     global currentBased
 
@@ -421,12 +386,12 @@ def pcRelative(line, opType):
         if newLoc < 0:
             newLoc = twosComplement(newLoc)
         newLoc2 = "%x" % newLoc
-        
-    
+
+
     elif basedStatus:
         XBPE = hexUpdater(XBPE, 4, 1)
         addressCode = turnIntoBased(line)
-        
+
     elif int(locationDictionary[line[2]], 16) < 2^15 :    # Turn into sic mode
         return turnIntoSic(line)
 
@@ -444,11 +409,11 @@ def pcRelative(line, opType):
             opcode = hexUpdater(opcode, 1, 1)  #Add 1 to hex value of opcode
         else:
             opcode = hexUpdater(opcode, 3, 1)
-    
+
     if locationDictionary.has_key(line[2]):
         addressCode = locationDictionary[line[2]]
         final = opcode + XBPE + addressCode
-        
+
     elif immediateStatus:
         addressCode = "000"
         addressCode = hexUpdater(addressCode, int(line[2], 16), 1)
@@ -470,33 +435,16 @@ def turnIntoSic(line):
     else:
         print "Invalid operand"
         errorCall()
-    
+
     final = opcode + address
     
-
     return final
-    
+
 
 def twosComplement(value):
     value = (-1)*(value - 1)
 
-    # binary = bin(value)
-    
-    # i = len(binary)
-    # binary2 = ''
-    # while binary[i] != "b":
-    #     if binary[1] == '1':
-    #         binary2 = '1'.join(binary2)
-    #     else:
-    #         binary2 = '0'.join(binary2)
-
-    value = ~ value
-    
-    
-
-    return value
-
-
+    return (~ value)
 
 
 def typeFour(line):
@@ -515,7 +463,7 @@ def typeFour(line):
             opcode = hexUpdater(opcode, 1, 1)  #Add 1 to hex value of opcode
         else:
             opcode = hexUpdater(opcode, 3, 1)
-  
+
     if indexStatus:
         XBPE = hexUpdater(XBPE, 8, 1)
 
@@ -532,8 +480,8 @@ def typeFour(line):
     else:
         errorCall()
 
-    return 
-                    
+    return
+
 def errorCall():
     print "Error on line: ", currentLine
     sys.exit(1)
@@ -564,10 +512,10 @@ def processCode(startLoc, newFileName, outputFileName):
     currentLocation = splitLine[2]
 
     currentLine = 1
- 
+
     while currentLine != len(fullFile) - 1:
-        
-        
+
+
 
         splitLine = regularExpressionSplit(fullFile[currentLine].upper())
 
@@ -588,10 +536,10 @@ def processCode(startLoc, newFileName, outputFileName):
                     line = typeThree(splitLine)
                     currentLocation = hexUpdater(currentLocation, 3, 1)
 
-            else:    
+            else:
                 print "Error with Type Selection"
                 errorCall()
-            
+
             print fullFile[currentLine]
             print line
 
@@ -602,8 +550,8 @@ def processCode(startLoc, newFileName, outputFileName):
             print "Invalid operator"
             errorCall()
 
-        
-        
+
+
         currentLine += 1
     return
 
@@ -620,7 +568,7 @@ def assembler():
     global currentLine
 
     global fullFile
-    
+
     readFile = ""
 
     if sys.argv[1] == '-S':
@@ -647,10 +595,9 @@ def assembler():
         fullFile.append(line)
 
     newFileName, startLoc = locationUpdate()
- 
+
     processCode(startLoc, newFileName, outputFileName)
-    
+
 
 if __name__ == "__main__":
     assembler()
-
